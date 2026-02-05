@@ -360,61 +360,6 @@ mLMMCF@cstanfit$cmdstan_diagnose()
 precis(mLMMCF, depth = 2)
 postLMMCF <- extract.samples(mLMMCF)
 
-mLMMCF <- ulam(
-    alist(
-        C ~ bernoulli(p),
-        logit(p) <- a[D] +
-            bA * A +
-            bU * U +
-            bK * sum(delta_j[1:K]) +
-            bUG * UG[D],
-
-        # parameters for top model
-        transpars > vector[MAXD]:a <<- abar + z * tau,
-        abar ~ normal(0, 1),
-        vector[MAXD]:z ~ normal(0, 1),
-        tau ~ exponential(1),
-
-        bK ~ normal(0, 1),
-        bA ~ normal(0, 0.5),
-        bU ~ normal(0, 1),
-        bUG ~ normal(0, 1),
-
-        # U model
-        U ~ bernoulli(pU),
-        logit(pU) <- aU + bUD * UG[D],
-        aU ~ normal(0, 1),
-        bUD ~ exponential(1),
-
-        # K model
-        K ~ ordered_logistic(phi, cutpoints),
-        phi <- aKK + bKK * UG[D],
-        bKK ~ exponential(1),
-        aKK ~ normal(0, 1),
-        cutpoints ~ normal(0, 1),
-
-        # UG model
-        vector[MAXD]:UG ~ normal(0, 1),
-
-        # the rest
-        vector[MAXK]:delta_j <<- append_row(0, delta),
-        simplex[MAXK - 1]:delta ~ dirichlet(alpha) #,
-        # # gq > matrix[2, 2]:Rho <<- Chol_to_Corr(L_Rho)
-        #bK * sum(delta(1:K)) +
-    ),
-    data = dat,
-    chains = 4,
-    cores = 4,
-    cmdstan = TRUE,
-    log_lik = TRUE,
-    sample = TRUE
-)
-
-dashboard(mLMMCF)
-mLMMCF@cstanfit$cmdstan_diagnose()
-precis(mLMMCF, depth = 2)
-
-
 compare(mPPO, mLMMCF)
 
 ### Plotting

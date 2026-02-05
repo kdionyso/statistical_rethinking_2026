@@ -636,3 +636,5 @@ for (i in 1:length(dat$D)) {
         lt = 2
     )
 }
+
+compare(mPPO, mFE, mML, mML_nc_pp_corr, mLMMCF)

@@ -1,4 +1,7 @@
 install.packages(c("coda", "mvtnorm", "devtools", "loo", "dagitty", "shape"))
+install.packages("devtools")
+devtools::install_github("IRkernel/IRkernel")
+IRkernel::installspec()
 devtools::install_github("rmcelreath/rethinking", force = TRUE)
 library(rethinking)
 data(bangladesh)
@@ -17,7 +20,7 @@ dat <- list(
 )
 
 # Original model
-mFE <- ulam(
+mPPO <- ulam(
     alist(
         C ~ bernoulli(p),
         logit(p) <- a[D] +
@@ -46,12 +49,64 @@ mFE <- ulam(
     log_lik = TRUE
 )
 
+dashboard(mPPO)
+mPPO@cstanfit$cmdstan_diagnose()
+precis(mPPO, depth = 2)
+
+# Fixed effects model with confounding variable
+mFE <- ulam(
+    alist(
+        C ~ bernoulli(p),
+        logit(p) <- a[D] +
+            bK[D] *
+                sum(delta_j[1:K]) +
+            bA * A +
+            bU[D] * U,
+        bA ~ normal(0, 0.5),
+        transpars > vector[MAXD]:a <<- abar + z_a * sigma_a,
+        transpars > vector[MAXD]:bK <<- bkbar + z_bk * sigma_bk,
+        transpars > vector[MAXD]:bU <<- bubar + z_bu * sigma_bu,
+
+        abar ~ normal(0, 1),
+        bkbar ~ normal(0, 1),
+        bubar ~ normal(0, 1),
+        vector[MAXD]:z_a ~ normal(0, 1),
+        vector[MAXD]:z_bk ~ normal(0, 1),
+        vector[MAXD]:z_bu ~ normal(0, 1),
+        c(sigma_a, sigma_bk, sigma_bu) ~ exponential(1),
+
+        vector[MAXK]:delta_j <<- append_row(0, delta),
+        simplex[MAXK - 1]:delta ~ dirichlet(alpha)
+    ),
+    data = dat,
+    chains = 4,
+    cores = 4,
+    cmdstan = TRUE,
+    log_lik = TRUE
+)
+
 dashboard(mFE)
 mFE@cstanfit$cmdstan_diagnose()
 precis(mFE, depth = 2)
+precis(mFE, depth = 2, pars = "delta_j")
 
-# Fixed effects model with confounding variable
+par(mfrow = c(1, 1))
+postMFE <- extract.samples(mFE)
+dens(postMFE$sigma_a, xlab = "std", cex = 4)
+dens(postMFE$sigma_bu, add = TRUE, col = 2, lw = 2)
+dens(postMFE$sigma_bk, add = TRUE, col = 4, lw = 2)
+curve(dexp(x, 1), add = TRUE, lty = 2)
 
+par(mfrow = c(1, 1))
+plot(
+    apply(postMFE$bK, 2, mean),
+    apply(postMFE$a, 2, mean),
+    col = 2,
+    xlab = "bK[D]",
+    ylab = "a[D]",
+    cex = 2,
+    lwd = 4
+)
 # Multi-level model with confounding variable
 
 # Mundlak model with confounding variable
@@ -68,8 +123,6 @@ dat <- list(
     alpha = rep(2, max(d$living.children) - 1),
     MAXK = max(d$living.children),
     MAXD = max(d$district)
-    #    A = standardize(d$age.centered),
-    #    K = d$living.children
 )
 mLMMCF <- ulam(
     alist(
@@ -117,9 +170,12 @@ mLMMCF <- ulam(
     chains = 4,
     cores = 4,
     cmdstan = TRUE,
-    log_lik = TRUE
+    log_lik = TRUE,
+    sample = TRUE
 )
 
 dashboard(mLMMCF)
 mLMMCF@cstanfit$cmdstan_diagnose()
 precis(mLMMCF, depth = 2)
+
+compare(mPPO, mLMMCF)

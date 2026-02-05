@@ -53,6 +53,7 @@ dashboard(mPPO)
 mPPO@cstanfit$cmdstan_diagnose()
 precis(mPPO, depth = 2)
 
+
 # Fixed effects model with confounding variable
 datFE <- list(
     C = d$use.contraception,
@@ -130,6 +131,7 @@ dens(postMFE$sigma_a, xlab = "std", cex = 4)
 dens(postMFE$sigma_bu, add = TRUE, col = 2, lw = 2)
 dens(postMFE$sigma_bk, add = TRUE, col = 4, lw = 2)
 curve(dexp(x, 1), add = TRUE, lty = 2)
+
 
 par(mfrow = c(1, 1))
 # Seems like they are correlated anyway
@@ -288,48 +290,6 @@ plot(
     lwd = 4
 )
 
-par(mfrow = c(1, 1))
-plot(
-    NULL,
-    xlim = c(0, max(dat$D) * 0.1),
-    ylim = c(0, 1),
-    xlab = "record",
-    ylab = "contraception"
-)
-res <- rbern(
-    1:length(dat$D),
-    prob = apply(inv_logit(postmML_nc_pp_corr$p), 2, mean)
-)
-prop_pred <- sapply(1:max(dat$D), function(q) {
-    return(sum(res[dat$D == q]) / sum(as.integer(dat$D == q)))
-})
-prop <- sapply(1:max(dat$D), function(q) {
-    return(sum(dat$C[dat$D == q]) / sum(as.integer(dat$D == q)))
-})
-for (i in 1:length(dat$D)) {
-    points(
-        i * 0.1,
-        prop[i],
-        col = "black",
-        cex = 2,
-        lwd = 4
-    )
-    points(
-        i * 0.1,
-        prop_pred[i],
-
-        col = 4,
-        cex = 2,
-        lwd = 4
-    )
-    lines(
-        c(i * 0.1, i * 0.1),
-        c(prop[i], prop_pred[i]),
-        col = 4,
-        lwd = 4,
-        lt = 2
-    )
-}
 # Mundlak model with confounding variable
 
 # Trial
@@ -398,6 +358,7 @@ mLMMCF <- ulam(
 dashboard(mLMMCF)
 mLMMCF@cstanfit$cmdstan_diagnose()
 precis(mLMMCF, depth = 2)
+postLMMCF <- extract.samples(mLMMCF)
 
 mLMMCF <- ulam(
     alist(
@@ -455,3 +416,223 @@ precis(mLMMCF, depth = 2)
 
 
 compare(mPPO, mLMMCF)
+
+### Plotting
+
+par(mfrow = c(5, 1))
+plot(
+    NULL,
+    xlim = c(0, max(dat$D) * 0.1),
+    ylim = c(0, 1),
+    xlab = "district",
+    ylab = "proportion[C]",
+    main = "mPPO"
+)
+res <- rbern(
+    1:length(dat$D),
+    prob = apply(inv_logit(mPPO$p), 2, mean)
+)
+prop_pred <- sapply(1:max(dat$D), function(q) {
+    return(sum(res[dat$D == q]) / sum(as.integer(dat$D == q)))
+})
+prop <- sapply(1:max(dat$D), function(q) {
+    return(sum(dat$C[dat$D == q]) / sum(as.integer(dat$D == q)))
+})
+for (i in 1:length(dat$D)) {
+    points(
+        i * 0.1,
+        prop[i],
+        col = "black",
+        cex = 2,
+        lwd = 4
+    )
+    points(
+        i * 0.1,
+        prop_pred[i],
+
+        col = 4,
+        cex = 2,
+        lwd = 4
+    )
+    lines(
+        c(i * 0.1, i * 0.1),
+        c(prop[i], prop_pred[i]),
+        col = 4,
+        lwd = 4,
+        lt = 2
+    )
+}
+
+plot(
+    NULL,
+    xlim = c(0, max(dat$D) * 0.1),
+    ylim = c(0, 1),
+    xlab = "district",
+    ylab = "proportion[C]",
+    main = "mFE"
+)
+res <- rbern(
+    1:length(dat$D),
+    prob = apply(inv_logit(postMFE$p), 2, mean)
+)
+prop_pred <- sapply(1:max(dat$D), function(q) {
+    return(sum(res[dat$D == q]) / sum(as.integer(dat$D == q)))
+})
+prop <- sapply(1:max(dat$D), function(q) {
+    return(sum(dat$C[dat$D == q]) / sum(as.integer(dat$D == q)))
+})
+for (i in 1:length(dat$D)) {
+    points(
+        i * 0.1,
+        prop[i],
+        col = "black",
+        cex = 2,
+        lwd = 4
+    )
+    points(
+        i * 0.1,
+        prop_pred[i],
+
+        col = 4,
+        cex = 2,
+        lwd = 4
+    )
+    lines(
+        c(i * 0.1, i * 0.1),
+        c(prop[i], prop_pred[i]),
+        col = 4,
+        lwd = 4,
+        lt = 2
+    )
+}
+
+plot(
+    NULL,
+    xlim = c(0, max(dat$D) * 0.1),
+    ylim = c(0, 1),
+    xlab = "district",
+    ylab = "proportion[C]",
+    main = "mML"
+)
+res <- rbern(
+    1:length(dat$D),
+    prob = apply(inv_logit(postmML$p), 2, mean)
+)
+prop_pred <- sapply(1:max(dat$D), function(q) {
+    return(sum(res[dat$D == q]) / sum(as.integer(dat$D == q)))
+})
+prop <- sapply(1:max(dat$D), function(q) {
+    return(sum(dat$C[dat$D == q]) / sum(as.integer(dat$D == q)))
+})
+for (i in 1:length(dat$D)) {
+    points(
+        i * 0.1,
+        prop[i],
+        col = "black",
+        cex = 2,
+        lwd = 4
+    )
+    points(
+        i * 0.1,
+        prop_pred[i],
+
+        col = 4,
+        cex = 2,
+        lwd = 4
+    )
+    lines(
+        c(i * 0.1, i * 0.1),
+        c(prop[i], prop_pred[i]),
+        col = 4,
+        lwd = 4,
+        lt = 2
+    )
+}
+
+
+plot(
+    NULL,
+    xlim = c(0, max(dat$D) * 0.1),
+    ylim = c(0, 1),
+    xlab = "district",
+    ylab = "proportion[C]",
+    main = "ML_nc_pp_corr"
+)
+res <- rbern(
+    1:length(dat$D),
+    prob = apply(inv_logit(postmML_nc_pp_corr$p), 2, mean)
+)
+prop_pred <- sapply(1:max(dat$D), function(q) {
+    return(sum(res[dat$D == q]) / sum(as.integer(dat$D == q)))
+})
+prop <- sapply(1:max(dat$D), function(q) {
+    return(sum(dat$C[dat$D == q]) / sum(as.integer(dat$D == q)))
+})
+for (i in 1:length(dat$D)) {
+    points(
+        i * 0.1,
+        prop[i],
+        col = "black",
+        cex = 2,
+        lwd = 4
+    )
+    points(
+        i * 0.1,
+        prop_pred[i],
+
+        col = 4,
+        cex = 2,
+        lwd = 4
+    )
+    lines(
+        c(i * 0.1, i * 0.1),
+        c(prop[i], prop_pred[i]),
+        col = 4,
+        lwd = 4,
+        lt = 2
+    )
+}
+
+
+plot(
+    NULL,
+    xlim = c(0, max(dat$D) * 0.1),
+    ylim = c(0, 1),
+    xlab = "district",
+    ylab = "proportion[C]",
+    main = "mLMMCF"
+)
+res <- rbern(
+    1:length(dat$D),
+    prob = apply(inv_logit(postLMMCF$p), 2, mean)
+)
+prop_pred <- sapply(1:max(dat$D), function(q) {
+    return(sum(res[dat$D == q]) / sum(as.integer(dat$D == q)))
+})
+prop <- sapply(1:max(dat$D), function(q) {
+    return(sum(dat$C[dat$D == q]) / sum(as.integer(dat$D == q)))
+})
+for (i in 1:length(dat$D)) {
+    points(
+        i * 0.1,
+        prop[i],
+        col = "black",
+        cex = 2,
+        lwd = 4
+    )
+    points(
+        i * 0.1,
+        prop_pred[i],
+
+        col = 4,
+        cex = 2,
+        lwd = 4
+    )
+    lines(
+        c(i * 0.1, i * 0.1),
+        c(prop[i], prop_pred[i]),
+        col = 4,
+        lwd = 4,
+        lt = 2
+    )
+}

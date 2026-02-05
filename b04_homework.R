@@ -583,3 +583,43 @@ for (i in 1:length(dat$D)) {
 }
 
 compare(mPPO, mFE, mML, mML_nc_pp_corr, mLMMCF)
+mPPO@cstanfit$cmdstan_diagnose() # chains ok # TODO: some issues with parameters
+kap <- as.data.frame(precis(mPPO, depth = 3))
+lkap <- kap[,
+    grepl("rhat", colnames(kap)) |
+        grepl("", colnames(kap)) |
+        grepl("ess_bulk", colnames(kap))
+]
+lkap[(lkap$rhat > 1.01) | (lkap$ess_bulk < 200), ]
+mFE@cstanfit$cmdstan_diagnose() # chains have divergences 0.2%
+kap <- as.data.frame(precis(mFE, depth = 3))
+lkap <- kap[,
+    grepl("rhat", colnames(kap)) |
+        grepl("", colnames(kap)) |
+        grepl("ess_bulk", colnames(kap))
+]
+lkap[(lkap$rhat > 1.01) | (lkap$ess_bulk < 200), ]
+mML@cstanfit$cmdstan_diagnose() # chains ok, sigma_bu rhat ~=1.014
+kap <- as.data.frame(precis(mML, depth = 3))
+lkap <- kap[,
+    grepl("rhat", colnames(kap)) |
+        grepl("", colnames(kap)) |
+        grepl("ess_bulk", colnames(kap))
+]
+lkap[(lkap$rhat > 1.01) | (lkap$ess_bulk < 200), ]
+mML_nc_pp_corr@cstanfit$cmdstan_diagnose() # chains with 1.02>rhat>1.01 # sigma[2], bK[7], v[30,2] # TODO: Something weird with parameters
+kap <- as.data.frame(precis(mML_nc_pp_corr, depth = 3))
+lkap <- kap[,
+    grepl("rhat", colnames(kap)) |
+        grepl("", colnames(kap)) |
+        grepl("ess_bulk", colnames(kap))
+]
+lkap[(lkap$rhat > 1.01) | (lkap$ess_bulk < 200), ]
+mLMMCF@cstanfit$cmdstan_diagnose() # # chains with 1.02>rhat>1.01 aU
+kap <- as.data.frame(precis(mLMMCF, depth = 3))
+lkap <- kap[,
+    grepl("rhat", colnames(kap)) |
+        grepl("", colnames(kap)) |
+        grepl("ess_bulk", colnames(kap))
+]
+lkap[(lkap$rhat > 1.01) | (lkap$ess_bulk < 200), ]

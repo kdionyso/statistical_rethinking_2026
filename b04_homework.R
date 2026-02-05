@@ -14,8 +14,6 @@ dat <- list(
     alpha = rep(2, max(d$living.children) - 1),
     MAXK = max(d$living.children),
     MAXD = max(d$district)
-    #    A = standardize(d$age.centered),
-    #    K = d$living.children
 )
 
 # Original model
@@ -31,7 +29,6 @@ mFE <- ulam(
         transpars > vector[MAXD]:a <<- abar[1] + v[, 1],
         transpars > vector[MAXD]:bK <<- abar[2] + v[, 2],
         transpars > vector[MAXD]:bU <<- abar[3] + v[, 3],
-        # transpars > vector[MAXD]:bA <<- abar[4] + v[, 4],
 
         transpars > matrix[MAXD, 3]:v <- compose_noncentered(sigma, L_Rho, Z),
         vector[3]:abar ~ normal(0, 1),

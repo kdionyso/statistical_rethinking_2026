@@ -54,114 +54,14 @@ mFE@cstanfit$cmdstan_diagnose()
 precis(mFE, depth = 2)
 
 # Fixed effects model with confounding variable
-mFECF <- ulam(
-    alist(
-        C ~ bernoulli(p),
-        logit(p) <- a[D] +
-            bK[D] *
-                sum(delta_j[1:K]) +
-            bA * A +
-            bU[D] * U,
-        bA ~ normal(0, 0.5),
-        transpars > vector[MAXD]:a <<- abar[1] + v[, 1],
-        transpars > vector[MAXD]:bK <<- abar[2] + v[, 2],
-        transpars > vector[MAXD]:bU <<- abar[3] + v[, 3],
-        # transpars > vector[MAXD]:bA <<- abar[4] + v[, 4],
-
-        transpars > matrix[MAXD, 3]:v <- compose_noncentered(sigma, L_Rho, Z),
-        vector[3]:abar ~ normal(0, 1),
-        matrix[3, MAXD]:Z ~ normal(0, 1),
-        vector[3]:sigma ~ exponential(1),
-        cholesky_factor_corr[3]:L_Rho ~ lkj_corr_cholesky(4),
-        vector[MAXK]:delta_j <<- append_row(0, delta),
-        simplex[MAXK - 1]:delta ~ dirichlet(alpha),
-        gq > matrix[3, 3]:Rho <<- Chol_to_Corr(L_Rho)
-    ),
-    data = dat,
-    chains = 4,
-    cores = 4,
-    cmdstan = TRUE,
-    log_lik = TRUE
-)
-
-dashboard(mFE)
-mFE@cstanfit$cmdstan_diagnose()
-precis(mFE, depth = 2)
-
 
 # Multi-level model with confounding variable
-mMLCF <- ulam(
-    alist(
-        C ~ bernoulli(p),
-        logit(p) <- a[D] +
-            bK[D] *
-                sum(delta_j[1:K]) +
-            bA * A +
-            bU[D] * U,
-        bA ~ normal(0, 0.5),
-        transpars > vector[MAXD]:a <<- abar[1] + v[, 1],
-        transpars > vector[MAXD]:bK <<- abar[2] + v[, 2],
-        transpars > vector[MAXD]:bU <<- abar[3] + v[, 3],
-        # transpars > vector[MAXD]:bA <<- abar[4] + v[, 4],
 
-        transpars > matrix[MAXD, 3]:v <- compose_noncentered(sigma, L_Rho, Z),
-        vector[3]:abar ~ normal(0, 1),
-        matrix[3, MAXD]:Z ~ normal(0, 1),
-        vector[3]:sigma ~ exponential(1),
-        cholesky_factor_corr[3]:L_Rho ~ lkj_corr_cholesky(4),
-        vector[MAXK]:delta_j <<- append_row(0, delta),
-        simplex[MAXK - 1]:delta ~ dirichlet(alpha),
-        gq > matrix[3, 3]:Rho <<- Chol_to_Corr(L_Rho)
-    ),
-    data = dat,
-    chains = 4,
-    cores = 4,
-    cmdstan = TRUE,
-    log_lik = TRUE
-)
-
-dashboard(mMLCF)
-mMLCF@cstanfit$cmdstan_diagnose()
-precis(mMLCF, depth = 2)
-
-# # Mundlak model with confounding variable
-# mMMCF <- ulam(
-#     alist(
-#         C ~ bernoulli(p),
-#         logit(p) <- a[D] +
-#             bK[D] *
-#                 sum(delta_j[1:K]) +
-#             bA * A +
-#             bU[D] * U,
-#         bA ~ normal(0, 0.5),
-#         transpars > vector[MAXD]:a <<- abar[1] + v[, 1],
-#         transpars > vector[MAXD]:bK <<- abar[2] + v[, 2],
-#         transpars > vector[MAXD]:bU <<- abar[3] + v[, 3],
-#         # transpars > vector[MAXD]:bA <<- abar[4] + v[, 4],
-
-#         transpars > matrix[MAXD, 3]:v <- compose_noncentered(sigma, L_Rho, Z),
-#         vector[3]:abar ~ normal(0, 1),
-#         matrix[3, MAXD]:Z ~ normal(0, 1),
-#         vector[3]:sigma ~ exponential(1),
-#         cholesky_factor_corr[3]:L_Rho ~ lkj_corr_cholesky(4),
-#         vector[MAXK]:delta_j <<- append_row(0, delta),
-#         simplex[MAXK - 1]:delta ~ dirichlet(alpha),
-#         gq > matrix[3, 3]:Rho <<- Chol_to_Corr(L_Rho)
-#     ),
-#     data = dat,
-#     chains = 4,
-#     cores = 4,
-#     cmdstan = TRUE,
-#     log_lik = TRUE
-# )
-
-# dashboard(mMMCF)
-# mMMCF@cstanfit$cmdstan_diagnose()
-# precis(mMMCF, depth = 2)
+# Mundlak model with confounding variable
 
 # Trial
 
-# Mundlak model with confounding variable
+# Latent Mundlak model with confounding variable
 dat <- list(
     C = d$use.contraception,
     D = as.integer(d$district),
@@ -223,6 +123,6 @@ mLMMCF <- ulam(
     log_lik = TRUE
 )
 
-# dashboard(mLMMCF)
-# mLMMCF@cstanfit$cmdstan_diagnose()
-# precis(mLMMCF, depth = 2)
+dashboard(mLMMCF)
+mLMMCF@cstanfit$cmdstan_diagnose()
+precis(mLMMCF, depth = 2)

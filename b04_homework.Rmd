@@ -430,18 +430,14 @@ mML_nc_pp_corr <- ulam(
     cmdstan = TRUE,
     log_lik = TRUE
 )
-
 ```
 Check model's dashboard and diagnostics
 ```{r}
-
 dashboard(mML_nc_pp_corr)
 ```
 The model is not particularly great as it has lots of variables with Rhat values above 1.01.
 ```{r}
-
 mML_nc_pp_corr@cstanfit$cmdstan_diagnose()
-
 ```
 ```{r}
 postmML_nc_pp_corr <- extract.samples(mML_nc_pp_corr)
@@ -542,7 +538,9 @@ mLMMCF <- ulam(
     log_lik = TRUE,
     sample = TRUE
 )
+precis(mLMMCF, depth = 3, pars = "delta_j")
 ```
+
 Check model's dashboard
 ```{r}
 dashboard(mLMMCF)
@@ -557,7 +555,7 @@ postLMMCF <- extract.samples(mLMMCF)
 ```
 and compare with the rest of the models in terms of WAIC or PSIS (ideally psis).
 ```{r}
-compare(mPPO, mFE, mML,mML_nc_pp_corr,mLMMCF)
+compare(mPPO, mFE, mML, mML_nc_pp_corr, mLMMCF)
 ```
 
 ### Plotting
@@ -646,7 +644,7 @@ visualize_data <- function(post_model, model_label) {
 ```
 ```{r out.height="50%", fig.cap="Contraception proportion by district. Black dots correspond to real data and blue dots are the predictions."}
 par(mfrow = c(5, 1))
-models <- list(mPPO = postPPO, mFE = postMFE, mML = postmML, mML_nc_corr=postmML_nc_pp_corr, LMMCF=postLMMCF)
+models <- list(mPPO = postPPO, mFE = postMFE, mML = postmML, mML_nc_corr = postmML_nc_pp_corr, LMMCF = postLMMCF)
 for (mod in names(models)) {
     visualize_data(post_model = models[[mod]], model_label = mod)
 }
@@ -684,10 +682,11 @@ visualize_data_proportions <- function(post_model, model_label) {
     norms <- sapply(1:max(dat$D), function(q) {
         sum(as.integer(dat$D == q))
     })
+    print(paste0(res_mean, norms))
 
-    real_data_norm <- real_data/norms
-    res_mean_norm <- res_mean/norms
-    res_CI_norm <- res_CI/rbind(norms,norms)
+    real_data_norm <- real_data / norms
+    res_mean_norm <- res_mean / norms
+    res_CI_norm <- res_CI / rbind(norms, norms)
 
     axis(1, at = seq(from = 0.2, by = 0.2, length.out = max(dat$D)), labels = seq(from = 1, length.out = max(dat$D)))
     for (i in 1:max(dat$D)) {
@@ -746,14 +745,71 @@ visualize_data_proportions <- function(post_model, model_label) {
 
 ```{r out.height="90%", fig.cap="Contraception proportion by district. Black dots correspond to real data and blue dots are the predictions."}
 par(mfrow = c(5, 1))
-models <- list(mPPO = postPPO, mFE = postMFE, mML = postmML, mML_nc_corr=postmML_nc_pp_corr, LMMCF=postLMMCF)
+models <- list(mPPO = postPPO, mFE = postMFE, mML = postmML, mML_nc_corr = postmML_nc_pp_corr, LMMCF = postLMMCF)
 for (mod in names(models)) {
     visualize_data_proportions(post_model = models[[mod]], model_label = mod)
 }
 ```
-<!-- ```{r out.width="50%" fig.width="50%" fig.cap="Contraception proportion by district. Black dots correspond to real data and blue dots are the predictions."}
-par(mfrow = c(1, 1))
+We see that all proportions are centered around 0.5, but that the spreads of the distributions for each one of the districts is different. The model appears to over-estimate the proportions in most cases, however for the majority of the cases the predictions are within the 89% confidence interval. __TODO: PLEASE CHECK__ 
 
+
+# Examine effects of having several children on contraception
+To examine the effects of having one child can be found by examining the posterior when $K=0$ and when $K=1$ and then ploting the density plot for $bK$ to identify the magnitude. For this we need a counter-factual simulation where for all records we place $K=0$, then repeat with $K=1$.
+
+```{r}
+dat_counter0 <- dat
+dat_counter1 <- dat
+
+
+postLMMCF <- extract.samples(mLMMCF)
+par(mfrow = c(4, 1))
+for (l in 0:3) {
+    # dat_counter0$K <- rep(l, length(dat$K))
+    # dat_counter1$K <- rep(l + 1, length(dat$K))
+    # fake_list0 <- dat_counter0
+    # fake_list1 <- dat_counter1
+
+    fake_list0 <- list(D = 1:max(dat$D), K = rep(l, max(dat$D)), alpha = rep(2, max(d$living.children)), MAXK = max(d$living.children), MAXD = max(dat$D))
+    fake_list1 <- list(D = 1:max(dat$D), K = rep(l + 1, max(dat$D)), alpha = rep(2, max(d$living.children)), MAXK = max(d$living.children), MAXD = max(dat$D))
+
+
+    p0 <- sapply(1:length(fake_list0$K), function(i) {
+        inv_logit(
+            postLMMCF$a[, fake_list0$D[i]] +
+                # bA * fake_list0$A +
+                # bU * U +
+                postLMMCF$bK * sum(postLMMCF$delta_j[, 1:fake_list0$K[i]])
+            # bUG * UG[fake_list0$D]))
+        )
+    })
+
+    p1 <- sapply(1:length(fake_list1$K), function(i) {
+        inv_logit(
+            postLMMCF$a[, fake_list1$D[i]] +
+                # bA * fake_list0$A +
+                # bU * U +
+                postLMMCF$bK * sum(postLMMCF$delta_j[, 1:fake_list1$K[i]])
+            # bUG * UG[fake_list0$D]))
+        )
+    })
+
+
+    print(apply(p0 - p1, 2, mean))
+
+    plot(NULL, xlim = c(-1.5, 1), ylim = c(0, 20), xlab = "p[C]", ylab = "Density", main = paste0("Difference between ", l, " and ", l + 1, "kids."))
+    for (i in 1:max(dat$D)) {
+        dens(p0[, i] - p1[, i], add = TRUE, col = col.alpha("black", i / max(dat$D)), lw = 4)
+    }
+}
+```
+
+```{r out.height="90%", fig.cap="Contraception proportion by district. Black dots correspond to real data and blue dots are the predictions."}
+par(mfrow = c(5, 1))
+models <- list(mPPO = postPPO, mFE = postMFE, mML = postmML, mML_nc_corr = postmML_nc_pp_corr, LMMCF = postLMMCF)
+for (mod in names(models)) {
+    visualize_data_proportions(post_model = models[[mod]], model_label = mod)
+}
+```
 
 plot(
     NULL,

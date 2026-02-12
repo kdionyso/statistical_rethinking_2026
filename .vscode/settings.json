@@ -1,0 +1,57 @@
+// {
+//     "r.plot.useHttpgd": false
+// }
+{
+    "r.bracketedPaste": true,
+    //"r.rterm.windows": "*Path to radian executable*", //Use this only for Windows 
+    //"r.rterm.linux": "*Path to radian executable*", //Use this only for Linux
+    "r.rterm.mac": "/Users/kdionyso/miniconda3/envs/statrethink/bin/radian", //Use this only for a Mac
+    "r.lsp.path": "/usr/local/bin/R", //"*Path to your R executable*",
+    "r.lsp.debug": true,
+    "r.lsp.diagnostics": true,
+    "r.source.focus": "editor",
+    "r.rterm.option": [
+        "--no-save",
+        "--no-restore",
+        "--r-binary=/usr/local/bin/R"
+    ],
+    "r.rpath.mac": "/usr/local/bin/R", //Use this only for a Mac
+    "r.alwaysUseActiveTerminal": true,
+    "r.sessionWatcher": true,
+    "terminal.integrated.env.osx": {
+        "R_HOME": "/Library/Frameworks/R.framework/Resources",
+        "R_BIN": "/usr/local/bin/R"
+    },
+    //"r.bracketedPaste": true,
+    //"r.rterm.mac": "/usr/local/bin/radian"
+    "r.debugger.timeouts.startup": 10000,
+    "r.debugger.printStdout": "all",
+    "r.debugger.printStderr": "all",
+    "r.debugger.printSinkSocket": "all",
+    "r.debugger.printStdin": "all",
+    "r.plot.useHttpgd": true,
+    "r.plot.defaults.fullWindowMode": true,
+    // "editor.fontFamily": "Fira Code",
+    // "r.plot.devArgs": {
+    //     "width": 1500,
+    //     "height": 1500,
+    //     "pointsize": 18,
+    // },
+    "r.libPaths": [
+        "/Users/kdionyso/local/codes/Rcode/statistical_rethinking/renv/library/macos/R-4.5/aarch64-apple-darwin20"
+    ],
+    "[r]": {
+        "editor.defaultFormatter": "REditorSupport.r",
+        "editor.formatOnSave": true,
+        "editor.wordSeparators": "`~!@#%$^&*()-=+[{]}\\|;:'\",<>/?"
+    },
+    "[rmd]": {
+        "editor.defaultFormatter": "REditorSupport.r",
+        "editor.formatOnSave": true
+    },
+    // "editor.fontFamily": "Fira Code, Menlo, Monaco, 'Courier New', monospace",
+    "editor.fontFamily": "Fira Code, monospace",
+    "editor.fontLigatures": true
+    // options(
+    //      vsc.dev.args = list(width = 1500, height = 1500, pointsize = 14, res = 300)
+}

@@ -1,0 +1,9 @@
+// Place your key bindings in this file to override the defaults
+[
+    {
+        "key": "shift+alt+p",
+        "command": "r.runCommand",
+        "when": "editorTextFocus && (editorLangId == '/r|rmd/'",
+        "args": ".vsc.browser(httpgd::hgd_url(), viewer = \"Beside\")"
+    }
+]
